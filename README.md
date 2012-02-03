@@ -6,9 +6,9 @@ Forked from https://github.com/godlygeek/tabular.
 Change #1: Extended format
 --------------------------
 
-Extended format so that we can limit the number of cells of each line to be processed.
+Limiting the number of cells to be processed.
 
-=== Why
+### Why
 In the following example, the additional colons in the third line should not be
 considered as cell-delimiters.
 
@@ -37,7 +37,7 @@ mysql:
   database:  test
 ```
 
-=== How
+### How
 
 Put this line into your .vimrc
 
@@ -49,7 +49,7 @@ let g:tabular_default_format = "l1-1"
 Change #2: Better tabularization in visual mode
 -----------------------------------------------
 
-=== Why
+### Why
 
 For the following case, where comments are interleaved,
 you might want to tabularize the lines in visual mode.
@@ -65,8 +65,8 @@ mysql:
   # password: r00t
 ```
 
-Select all the lines in visual mode then, `:'<,'>Tab /:\zs`
-Then, the result should be
+Select all the lines in visual mode then, `:'<,'>Tab /:\zs`.
+The result should be
 
 ```yaml
 mysql:
