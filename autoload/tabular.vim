@@ -212,7 +212,7 @@ function! tabular#TabularizeStrings(strings, delim, ...)
       endif
 
       if i == len(maxes)
-        let maxes += [ s:Strlen(line[i]) ]
+        let maxes += [ localmax ]
       else
         let maxes[i] = max( [ maxes[i], localmax ] )
       endif

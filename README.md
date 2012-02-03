@@ -23,9 +23,9 @@ Which means, we want
 
 ```yaml
 mysql:
-  driver:   com.mysql.jdbc.Driver
-  url:      jdbc:mysql://localhost/test
-  database: test
+  driver:    com.mysql.jdbc.Driver
+  url:       jdbc:mysql://localhost/test
+  database:  test
 ```
 
 and not,
