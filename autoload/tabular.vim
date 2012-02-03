@@ -67,7 +67,7 @@ endfunction
 " Like split(), but include the delimiters as elements
 " All odd numbered elements are delimiters
 " All even numbered elements are non-delimiters (including zero)
-function! s:SplitDelim(string, delim)
+function! s:SplitDelim(string, delim, num_cells)
   let rv = []
   let beg = 0
 
@@ -75,6 +75,10 @@ function! s:SplitDelim(string, delim)
   let searchoff = 0
 
   while 1
+    if a:num_cells > 0 && len(rv) > a:num_cells
+      break
+    end
+
     let mid = match(a:string, a:delim, beg + searchoff, 1)
     if mid == -1 || mid == len
       break
@@ -151,7 +155,7 @@ if !exists("g:tabular_default_format")
   let g:tabular_default_format = "l1"
 endif
 
-let s:formatelempat = '\%([lrc]\d\+\%(-\d\+\)\{,1}\)'
+let s:formatelempat = '\%([lrc]\d\+\)'
 
 function! tabular#ElementFormatPattern()
   return s:formatelempat
@@ -170,14 +174,15 @@ function! tabular#TabularizeStrings(strings, delim, ...)
 
   let formatstr = (a:0 ? a:1 : g:tabular_default_format)
 
-  if formatstr !~? s:formatelempat . '\+'
+  if formatstr !~? s:formatelempat . '\+\%(-\d\+\)\{,1}'
     echoerr "Tabular: Invalid format \"" . formatstr . "\" specified!"
     return 1
   endif
 
-  let format = split(formatstr, s:formatelempat . '\zs')
+  let format = split(substitute(formatstr, '-\d\+$', '', ''), s:formatelempat . '\zs')
+  let num_cells = matchstr(formatstr, '-\d\+$')[1:-1] + 0
 
-  let lines = map(a:strings, 's:SplitDelim(v:val, a:delim)')
+  let lines = map(a:strings, 's:SplitDelim(v:val, a:delim, num_cells)')
 
   " Strip spaces
   "   - Only from non-delimiters; spaces in delimiters must have been matched
@@ -197,16 +202,19 @@ function! tabular#TabularizeStrings(strings, delim, ...)
   " Find the max length of each field
   let maxes = []
   for line in lines
-    " Skip line without any delimiter
-    if len(lines) > 1 && len(line) == 1 
-      continue
-    endif
 
     for i in range(len(line))
+      " Skip line without any delimiter
+      if len(lines) > 1 && len(line) == 1 
+        let localmax = 0
+      else
+        let localmax = s:Strlen(line[i])
+      endif
+
       if i == len(maxes)
         let maxes += [ s:Strlen(line[i]) ]
       else
-        let maxes[i] = max( [ maxes[i], s:Strlen(line[i]) ] )
+        let maxes[i] = max( [ maxes[i], localmax ] )
       endif
     endfor
   endfor
@@ -218,8 +226,7 @@ function! tabular#TabularizeStrings(strings, delim, ...)
     let line = lines[idx]
     for i in range(len(line))
       let how = format[i % len(format)][0]
-      let pad_repeat = split( format[i % len(format)][1:-1], '-' )
-      let pad = pad_repeat[0]
+      let pad = format[i % len(format)][1:-1]
 
       if how =~? 'l'
         let field = s:Left(line[i], maxes[i])
@@ -230,10 +237,6 @@ function! tabular#TabularizeStrings(strings, delim, ...)
       endif
 
       let line[i] = field . (lead_blank && i == 0 ? '' : repeat(" ", pad))
-
-      if len(pad_repeat) > 1 && i + 1 > pad_repeat[1]
-        break
-      endif
     endfor
 
     let lines[idx] = s:StripTrailingSpaces(join(line, ''))
@@ -287,7 +290,7 @@ function! tabular#PipeRange(includepat, ...) range
 endfunction
 
 function! s:SplitDelimTest(string, delim, expected)
-  let result = s:SplitDelim(a:string, a:delim)
+  let result = s:SplitDelim(a:string, a:delim, '')
 
   if result !=# a:expected
     echomsg 'Test failed!'
