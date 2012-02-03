@@ -290,7 +290,7 @@ function! tabular#PipeRange(includepat, ...) range
 endfunction
 
 function! s:SplitDelimTest(string, delim, expected)
-  let result = s:SplitDelim(a:string, a:delim, '')
+  let result = s:SplitDelim(a:string, a:delim, 0)
 
   if result !=# a:expected
     echomsg 'Test failed!'
