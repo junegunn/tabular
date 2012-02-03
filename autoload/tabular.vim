@@ -151,7 +151,7 @@ if !exists("g:tabular_default_format")
   let g:tabular_default_format = "l1"
 endif
 
-let s:formatelempat = '\%([lrc]\d\+\)'
+let s:formatelempat = '\%([lrc]\d\+\%(-\d\+\)\{,1}\)'
 
 function! tabular#ElementFormatPattern()
   return s:formatelempat
@@ -197,6 +197,11 @@ function! tabular#TabularizeStrings(strings, delim, ...)
   " Find the max length of each field
   let maxes = []
   for line in lines
+    " Skip line without any delimiter
+    if len(lines) > 1 && len(line) == 1 
+      continue
+    endif
+
     for i in range(len(line))
       if i == len(maxes)
         let maxes += [ s:Strlen(line[i]) ]
@@ -213,7 +218,8 @@ function! tabular#TabularizeStrings(strings, delim, ...)
     let line = lines[idx]
     for i in range(len(line))
       let how = format[i % len(format)][0]
-      let pad = format[i % len(format)][1:-1]
+      let pad_repeat = split( format[i % len(format)][1:-1], '-' )
+      let pad = pad_repeat[0]
 
       if how =~? 'l'
         let field = s:Left(line[i], maxes[i])
@@ -224,6 +230,10 @@ function! tabular#TabularizeStrings(strings, delim, ...)
       endif
 
       let line[i] = field . (lead_blank && i == 0 ? '' : repeat(" ", pad))
+
+      if len(pad_repeat) > 1 && i + 1 > pad_repeat[1]
+        break
+      endif
     endfor
 
     let lines[idx] = s:StripTrailingSpaces(join(line, ''))
